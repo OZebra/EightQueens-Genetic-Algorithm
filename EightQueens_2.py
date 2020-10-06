@@ -93,28 +93,44 @@ def getIndividualFitness(individual):
 
 def selectParents(pop):
     parents = []
+    parentsIds = []
     popLength = len(pop)
 
     for iterator in range(0,MAX_CROSS_ITERATIONS):
         parentsCandidates = []
+        parentsCandidatesIds = []
 
         for index in range(0,CANDIDATE_AMMOUNT):
             random.seed()
 
-            randIndex = random.randrange(0,popLength);
+            randIndex = random.randrange(0,popLength)
+
+            while (pop[randIndex]['id'] in parentsIds) or (pop[randIndex]['id'] in parentsCandidatesIds):
+                randIndex = random.randrange(0,popLength)
 
             parentsCandidates.append(pop[randIndex])
-            #Selecionar 5 candidator e dar push
+            parentsCandidatesIds.append(pop[randIndex]['id'])
         
         parentsCandidates.sort(key = getIndividualFitness)
         parent_1 = parentsCandidates.pop()
         parent_2 = parentsCandidates.pop()
 
+        parentsIds.append(parent_1['id'])
+        parentsIds.append(parent_2['id'])
+
         parents.append({
             "firstParent": parent_1,
             "secondParent": parent_2
         })
-
+#    print('===================')
+#   for x in parents:
+#       print('-------------')
+#        print(x['firstParent']['id'])
+#        print(x['secondParent']['id'])
+#        print('-------------')
+#        if(x['secondParent']['id'] == x['firstParent']['id']):
+#            print('PIMBA!!!!!!!!!')
+#    print('===================')
     return parents
 
 def cutAndCross(child_1, child_2):
@@ -228,6 +244,8 @@ def runByIterations(iterationMax):
 
         iterations += 1
 
+    printIndividuals(population)
+
     return population
 
 def runByFitness():
@@ -235,15 +253,18 @@ def runByFitness():
     population = initPopulation(POPULATION_SIZE)
     population = calculatePopulationFitness(population)
 
+    iterator = 0
+
     while(validatePopulation(population) < 1):
         population = procreatePopulation(population)
         population = filterPopulation(population)
+        iterator += 1
 
         
     printIndividuals(population)
+    print('Iteration count: ' + str(iterator))
 
     return population
 
 
-runByFitness()
-
+runByIterations(1000)

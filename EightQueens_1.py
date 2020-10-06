@@ -223,8 +223,15 @@ def runByFitness():
     population = initPopulation(POPULATION_SIZE)
     population = calculatePopulationFitness(population)
 
+    iterator = 0
     while(validatePopulation(population) < 1):
         population = procreatePopulation(population)
         population = filterPopulation(population)
+        iterator += 1
+
+    print('iteration counte: ' + str(iterator)) 
 
     return population
+
+runByFitness()
+
