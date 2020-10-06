@@ -9,6 +9,16 @@ MAX_CROSS_ITERATIONS = 10
 
 # 000 | 000 | 000 | 000 | 000 | 000 | 000 | 000
 
+ind_id = 0
+
+def getID():
+    global ind_id
+
+    ind_id = ind_id + 1
+
+    return ind_id - 1
+
+
 def makeIndividual():
     individual =  [None] * INDIVIDUAL_SIZE
     #Adicionar (indSize + 1) no lugar do 9 pra fazer tabuleiros maiores
@@ -29,7 +39,8 @@ def initPopulation(pop_size):
     for x in range(0,pop_size):
         popList.append({
             'genotype': makeIndividual(),
-            'fitness': 0
+            'fitness': 0,
+            'id': getID()
         })
 
     return popList
@@ -132,6 +143,7 @@ def cutAndCross(child_1, child_2):
     return {
         'genotype': crossGen,
         'fitness': 0,
+        'id': getID()
     }
 
 def generateChildren(parents):
@@ -227,4 +239,11 @@ def runByFitness():
         population = procreatePopulation(population)
         population = filterPopulation(population)
 
+        
+    printIndividuals(population)
+
     return population
+
+
+runByFitness()
+

@@ -1,0 +1,2 @@
+Execution Fitness Mean: 0.95
+Execution Fitness STD: 0.15811388300841897
