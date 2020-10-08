@@ -1,28 +1,39 @@
 import random
+import re
 
 POPULATION_SIZE = 100
 INDIVIDUAL_SIZE = 8
 CANDIDATE_AMMOUNT = 5
 
-# Ammount of times we will be selecting parents 
 MAX_CROSS_ITERATIONS = 10
-
-# 000 | 000 | 000 | 000 | 000 | 000 | 000 | 000
 
 ind_id = 0
 
 def getID():
     global ind_id
-
     ind_id = ind_id + 1
 
     return ind_id - 1
 
+def arrayToString(array):
+    finalstring = ''
+    for item in array:
+        finalstring += format(item,'b').zfill(3) 
+
+    return finalstring
+
+def binaryToInt(string):
+    return int(string, 2)
+
+def stringToArray(string):
+    array = re.findall('...', string)
+    array = list(map(binaryToInt, array))
+    return array
 
 def makeIndividual():
     individual =  [None] * INDIVIDUAL_SIZE
-    #Adicionar (indSize + 1) no lugar do 9 pra fazer tabuleiros maiores
-    for x in range(1,INDIVIDUAL_SIZE + 1):
+
+    for x in range(0,INDIVIDUAL_SIZE):
         random.seed()
         index = random.randrange(0,INDIVIDUAL_SIZE)
 
@@ -31,7 +42,7 @@ def makeIndividual():
         
         individual[index] = x
 
-    return individual
+    return arrayToString(individual)
 
 def initPopulation(pop_size):
     popList = []
@@ -45,8 +56,9 @@ def initPopulation(pop_size):
 
     return popList
 
-def calculateColisions(gen):
+def calculateColisions(genString):
     colisionCount = 0
+    gen = stringToArray(genString)
 
     for index in range(0,len(gen)):
         for searchIndex in range(1,len(gen)):
@@ -67,13 +79,12 @@ def calculateColisions(gen):
 def calculateIndividualFitness(ind):
     genColisions = calculateColisions(ind['genotype'])
 
-    ind['fitness'] = 1/(1+genColisions)
+    ind['fitness'] = 1/(1+(0.15*genColisions))
 
     return ind
 
 
 def calculatePopulationFitness(pop):
-    #Individual index
     for ind_index in range(0,len(pop)):
         pop[ind_index] = calculateIndividualFitness(pop[ind_index])
 
@@ -122,20 +133,12 @@ def selectParents(pop):
             "firstParent": parent_1,
             "secondParent": parent_2
         })
-#    print('===================')
-#   for x in parents:
-#       print('-------------')
-#        print(x['firstParent']['id'])
-#        print(x['secondParent']['id'])
-#        print('-------------')
-#        if(x['secondParent']['id'] == x['firstParent']['id']):
-#            print('PIMBA!!!!!!!!!')
-#    print('===================')
+
     return parents
 
-def cutAndCross(child_1, child_2):
-    gen_1 = child_1['genotype'];
-    gen_2 = child_2['genotype'];
+def cutAndCross(par_1, par_2):
+    gen_1 = stringToArray(par_1['genotype']);
+    gen_2 = stringToArray(par_2['genotype']);
 
     crossGen = []
 
@@ -157,7 +160,7 @@ def cutAndCross(child_1, child_2):
                 crossOverControl.append(gen_2[index-8]);
 
     return {
-        'genotype': crossGen,
+        'genotype': arrayToString(crossGen),
         'fitness': 0,
         'id': getID()
     }
@@ -167,14 +170,12 @@ def generateChildren(parents):
 
     for pair in parents:
         random.seed()
-        shuffleChance = random.randrange(1,11); #Gerar um número aleatório de 1 até 10
+        shuffleChance = random.randrange(1,11);
         if(shuffleChance != 10):
-            #If genetic shuffle occour
             child_1 = cutAndCross(pair['firstParent'], pair['secondParent'])
             child_2 = cutAndCross(pair['secondParent'], pair['firstParent'])
         
         else:
-            #If genetic shuffle not occour
             child_1 = pair['firstParent']
             child_2 = pair['secondParent']
         
@@ -184,12 +185,13 @@ def generateChildren(parents):
     return generatedChildren
 
 def mutate(individual):
-    IndividualHalf = int(len(individual['genotype'])/2)
+    genAsArray = stringToArray(individual['genotype'])
+    leng = int(len(genAsArray)/2)
 
-    firstHalf = individual['genotype'][:IndividualHalf]
-    secondHalf = individual['genotype'][IndividualHalf:]
+    first = genAsArray[:leng]
+    second = genAsArray[leng:]
 
-    individual['genotype'] = secondHalf + firstHalf
+    individual['genotype'] = arrayToString(first + second)
 
     return individual
 
@@ -210,7 +212,6 @@ def procreatePopulation(pop):
     return pop + children
 
 def filterPopulation(pop):
-    #Deixar de ser elitista
     newPopulation = calculatePopulationFitness(pop)
     newPopulation.sort(key = getIndividualFitness, reverse = True);
 
@@ -244,10 +245,10 @@ def runByIterations(iterationMax):
 
         iterations += 1
 
-    printIndividuals(population)
-
-    return population
-
+    return {
+        'population': population,
+        'iterationCount': iterations
+    }
 def runByFitness():
 
     population = initPopulation(POPULATION_SIZE)
@@ -255,16 +256,14 @@ def runByFitness():
 
     iterator = 0
 
-    while(validatePopulation(population) < 1):
+    while(validatePopulation(population) < 1 and iterator <= 1000):
         population = procreatePopulation(population)
         population = filterPopulation(population)
         iterator += 1
 
-        
-    printIndividuals(population)
     print('Iteration count: ' + str(iterator))
 
-    return population
-
-
-runByIterations(1000)
+    return {
+        'population': population,
+        'iterationCount': iterator
+    }

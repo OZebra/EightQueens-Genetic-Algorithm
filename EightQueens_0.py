@@ -23,18 +23,14 @@ def stringToArray(string):
     return array
 
 def makeIndividual():
-    individual =  [None] * INDIVIDUAL_SIZE
-    #Adicionar (indSize + 1) no lugar do 9 pra fazer tabuleiros maiores
-    for x in range(0,INDIVIDUAL_SIZE):
-        random.seed()
-        index = random.randrange(0,INDIVIDUAL_SIZE)
+    individual =  ''
 
-        while individual[index] != None:
-            index = random.randrange(0,INDIVIDUAL_SIZE)
-        
-        individual[index] = x
-
-    return arrayToString(individual)
+    for x in range(INDIVIDUAL_SIZE*3):
+        if random.random() > 0.5:
+            individual += '1'
+        else:
+            individual += '0'
+    return individual
 
 def initPopulation(pop_size):
     popList = []
@@ -75,7 +71,7 @@ def calculateColisions(gen):
 def calculateIndividualFitness(ind):
     genColisions = calculateColisions(ind['genotype'])
 
-    ind['fitness'] = 1/(1+(0.15*genColisions))
+    ind['fitness'] = 1/(1+genColisions)
 
     return ind
 
@@ -124,31 +120,16 @@ def selectParents(pop):
     return parents
 
 def cutAndCross(child_1, child_2):
-    gen_1 = stringToArray(child_1['genotype']);
-    gen_2 = stringToArray(child_2['genotype']);
+    gen_1 = stringToArray(child_1['genotype'])
+    gen_2 = stringToArray(child_2['genotype'])
 
-    crossGen = []
+    genLen = int(len(gen_1)/2)
 
-    crossOverControl = []
-
-    for index in range(0,3):
-        crossGen.append(gen_1[index])
-        crossOverControl.append(gen_1[index]);
-    
-    for index in range(3,11):
-        if(index < 8):
-            if gen_2[index] not in crossOverControl:
-                crossGen.append(gen_2[index]);
-                crossOverControl.append(gen_2[index]);
-        
-        else:
-            if(gen_2[index-8] not in crossOverControl):
-                crossGen.append(gen_2[index - 8]);
-                crossOverControl.append(gen_2[index-8]);
+    crossGen = gen_1[:genLen] + gen_2[genLen:]
 
     return {
         'genotype': arrayToString(crossGen),
-        'fitness': 0
+        'fitness': 0,
     }
 
 def generateChildren(parents):
@@ -158,10 +139,12 @@ def generateChildren(parents):
         random.seed()
         shuffleChance = random.random()
         if(shuffleChance < 0.9):
+            #If genetic shuffle occour
             child_1 = cutAndCross(pair['firstParent'], pair['secondParent'])
             child_2 = cutAndCross(pair['secondParent'], pair['firstParent'])
         
         else:
+            #If genetic shuffle not occour
             child_1 = pair['firstParent']
             child_2 = pair['secondParent']
         
@@ -171,16 +154,15 @@ def generateChildren(parents):
     return generatedChildren
 
 def mutate(individual):
-    genAsArray = stringToArray(individual['genotype'])
-
-    first = random.randrange(len(genAsArray))
-    second = random.randrange(len(genAsArray))
-
-    auxiliar = genAsArray[first]
-    genAsArray[first] = genAsArray[second]
-    genAsArray[second] = auxiliar
+    genAsArray = individual['genotype']
+    new = ''
+    for index in range(len(genAsArray)):
+        if random.random() <= 0.5:
+            new += str(random.getrandbits(1))
+        else:
+            new += genAsArray[index]
  
-    individual['genotype'] = arrayToString(genAsArray)
+    individual['genotype'] = new
 
     return individual
 
@@ -232,10 +214,7 @@ def runByIterations(iterationMax):
 
         iterations += 1
 
-    return {
-        'population': population,
-        'iterationCount': iterations
-    }
+    return population
 
 def runByFitness():
 
